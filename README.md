@@ -19,9 +19,10 @@
 
 ## Download and run
 
-1. Download **[MySystemGui.exe](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.exe)** from the [Releases page](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases).
-2. Open the executable. Windows will ask for administrator permission because some MAS workflows need elevated access.
-3. Choose a module and follow the confirmation prompts. Check the Activity Log for status and details; use **Full Log** for the complete output.
+1. Download **
+ * [MySystemGui.exe](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.exe)** from the [Releases page](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases).
+3. Open the executable. Windows will ask for administrator permission because some MAS workflows need elevated access.
+4. Choose a module and follow the confirmation prompts. Check the Activity Log for status and details; use **Full Log** for the complete output.
 
 The release is a self-contained, single-file Windows x64 application. You do not need to install the .NET runtime or download `MAS_AIO.cmd` separately. The app embeds the script and extracts it to the current user's Local Application Data folder when a workflow needs it.
 
