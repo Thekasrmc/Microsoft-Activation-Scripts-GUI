@@ -1,5 +1,6 @@
 using System.IO;
 using System.Diagnostics;
+using System.Security;
 using System.Text;
 using Microsoft.Win32;
 
@@ -95,13 +96,7 @@ public sealed class MaintenanceService
 
     private static (string Executable, string Arguments, string DisplayName) BuildMasActivationStatusCommand()
     {
-        string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MAS_AIO.cmd");
-        if (!File.Exists(scriptPath))
-        {
-            throw new FileNotFoundException(
-                "MAS_AIO.cmd is required to run its Check Activation Status routine.",
-                scriptPath);
-        }
+        string scriptPath = MasScriptProvider.GetScriptPath();
 
         string escapedScriptPath = scriptPath.Replace("'", "''", StringComparison.Ordinal);
         string command =

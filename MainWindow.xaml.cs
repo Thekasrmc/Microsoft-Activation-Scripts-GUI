@@ -599,13 +599,18 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
-        string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MAS_AIO.cmd");
-        if (!File.Exists(scriptPath))
+        string scriptPath;
+        try
+        {
+            scriptPath = MasScriptProvider.GetScriptPath();
+        }
+        catch (Exception ex) when (
+            ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException)
         {
             ShowNotification(
-                "MAS_AIO.cmd was not found. Check the Activity Log for its expected location.",
+                "The embedded MAS script could not be extracted. See the Activity Log for details.",
                 LogStatus.Error,
-                scriptPath);
+                ex.Message);
             return;
         }
 
@@ -772,13 +777,18 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
-        string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MAS_AIO.cmd");
-        if (!File.Exists(scriptPath))
+        string scriptPath;
+        try
+        {
+            scriptPath = MasScriptProvider.GetScriptPath();
+        }
+        catch (Exception ex) when (
+            ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException)
         {
             ShowNotification(
-                "MAS_AIO.cmd was not found. Check the Activity Log for its expected location.",
+                "The embedded MAS script could not be extracted. See the Activity Log for details.",
                 LogStatus.Error,
-                scriptPath);
+                ex.Message);
             return;
         }
 
@@ -1053,7 +1063,7 @@ public partial class MainWindow : FluentWindow
             string scriptsDir = Path.Combine(desktopDir, "$OEM$", "$$", "Setup", "Scripts");
             Directory.CreateDirectory(scriptsDir);
 
-            string sourceScript = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MAS_AIO.cmd");
+            string sourceScript = MasScriptProvider.GetScriptPath();
             bool masScriptCopied = File.Exists(sourceScript);
             if (masScriptCopied)
             {
@@ -1061,7 +1071,7 @@ public partial class MainWindow : FluentWindow
             }
             else
             {
-                AppendLog("> Warning: MAS_AIO.cmd was not found next to the app; SetupComplete.cmd was still generated.", LogStatus.Warning);
+                AppendLog("> Warning: The embedded MAS script could not be extracted; SetupComplete.cmd was still generated.", LogStatus.Warning);
             }
 
             string setupCompletePath = Path.Combine(scriptsDir, "SetupComplete.cmd");
@@ -1076,7 +1086,7 @@ public partial class MainWindow : FluentWindow
             ShowNotification(
                 masScriptCopied
                     ? "$OEM$ preset created on the Desktop."
-                    : "$OEM$ preset created, but MAS_AIO.cmd is missing.",
+                    : "$OEM$ preset created, but the embedded MAS script could not be extracted.",
                 masScriptCopied ? LogStatus.Success : LogStatus.Warning,
                 $"SetupComplete.cmd: {setupCompletePath}; arguments: {masArguments}" +
                 (masScriptCopied ? string.Empty : $"; missing script: {sourceScript}"));
@@ -1186,7 +1196,7 @@ public partial class MainWindow : FluentWindow
                 LogStatus.Error,
                 $"{ex.Message} Elapsed: {FormatElapsed(elapsed.Elapsed)}");
         }
-        catch (IOException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
         {
             elapsed.Stop();
             ShowNotification(
