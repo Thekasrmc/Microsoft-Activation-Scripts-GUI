@@ -17,6 +17,10 @@
 
 <hr>
 
+<p align="center">
+  <img src="docs/screenshots/main-window.png" alt="Microsoft Activation Scripts GUI main window" width="900">
+</p>
+
 ## Download and run
 
 1. Download **[MySystemGui.exe](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MySystemGui.exe)** from the [Releases page](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases).
