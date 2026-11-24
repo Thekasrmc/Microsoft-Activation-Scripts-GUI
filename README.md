@@ -41,19 +41,6 @@ Some workflows open the original MAS console so that its own system checks, opti
 - **Fix Licensing** can clear licensing records and may require Windows or Office to be activated again.
 - Use only software and product keys you are licensed to use. This app does not provide a license or product key.
 
-## Build from source
-
-Requirements: Windows and the **.NET 10 SDK**.
-
-Run these commands from the repository root:
-
-```powershell
-dotnet restore .\MySystemGui.csproj
-dotnet publish .\MySystemGui.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:DebugType=None -o .\publish\win-x64
-```
-
-The executable is written to `publish\win-x64\MySystemGui.exe`.
-
 ## Technology and license
 
 The app is built with **WPF**, **.NET 10**, and [WPF-UI](https://github.com/lepoco/wpfui). See [LICENSE](LICENSE) for this repository's license. Refer to the upstream MAS project for its source, documentation, and licensing.
