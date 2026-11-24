@@ -19,7 +19,7 @@
 
 ## Download and run
 
-1. Download **[MySystemGui.exe](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MySystemGui.exe)** from the [Releases page](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases).
+1. Download **[MySystemGui.exe](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.exe)** from the [Releases page](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases).
 2. Open the executable. Windows will ask for administrator permission because some MAS workflows need elevated access.
 3. Choose a module and follow the confirmation prompts. Check the Activity Log for status and details; use **Full Log** for the complete output.
 
