@@ -22,7 +22,7 @@
 1. Download the script:
   *   [**MAS-GUI.exe**](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.exe) (Direct application)
   *   [**MAS-GUI.ZIP**](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.zip) (If the direct script is blocked by your browser)
-2. Open the executable. Windows will ask for **administrator permission** because some MAS workflows need elevated access.
+2. Open the executable. Windows will ask for **`administrator permission`** because some MAS workflows need elevated access.
 3. Choose a module and follow the confirmation prompts. Check the Activity Log for status and details; use **Full Log** for the complete output.
 
 The release is a self-contained, single-file Windows x64 application. You do not need to install the .NET runtime or download `MAS_AIO.cmd` separately. The app embeds the script and extracts it to the current user's Local Application Data folder when a workflow needs it.
