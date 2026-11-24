@@ -20,8 +20,8 @@
 ## Download and run
 
 1. Download the script:
-  *   [**MAS-GUI.exe**](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.exe)
-  *   [**MAS-GUI.ZIP**](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.zip)
+  *   [**MAS-GUI.exe**](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.exe) (Direct application)
+  *   [**MAS-GUI.ZIP**](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.0.0/MAS-GUI.zip) (If the direct script is blocked by your browser)
 3. Open the executable. Windows will ask for administrator permission because some MAS workflows need elevated access.
 4. Choose a module and follow the confirmation prompts. Check the Activity Log for status and details; use **Full Log** for the complete output.
 
