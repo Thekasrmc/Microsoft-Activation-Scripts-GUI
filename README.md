@@ -18,7 +18,7 @@ An independent Windows desktop interface for selected workflows from [Microsoft 
 
 ## Download and start
 
-1. Download **[MAS-GUI.exe](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/latest/download/MAS-GUI.exe)** from the latest GitHub Release.
+1. Download **[MAS-GUI.exe](https://github.com/Thekasrmc/Microsoft-Activation-Scripts-GUI/releases/download/v1.1.0/MAS_GUI.exe)** from the latest GitHub Release.
 2. Open the downloaded file. Windows may request administrator permission because some system and MAS workflows require it.
 3. Choose a tool and follow its confirmation prompts. Progress and messages appear in the Activity Log.
 
