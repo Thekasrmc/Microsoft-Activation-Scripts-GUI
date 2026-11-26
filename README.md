@@ -13,7 +13,7 @@ An independent Windows desktop interface for selected workflows from [Microsoft 
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/main-window.png" alt="Microsoft Activation Scripts GUI main window" width="900">
+  <img src="docs/screenshot/main-window.png" alt="Microsoft Activation Scripts GUI main window" width="900">
 </p>
 
 ## Download and start
