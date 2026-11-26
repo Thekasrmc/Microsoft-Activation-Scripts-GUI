@@ -6,8 +6,8 @@
                  Icon="/MySystemGui;component/logo.png"
                  Width="1100"
                  Height="680"
-                 MinWidth="1100"
-                 MinHeight="680"
+                 MinWidth="900"
+                 MinHeight="620"
                  WindowStartupLocation="CenterScreen"
                  Background="#101014"
                  Foreground="#F3F4F6"
@@ -226,12 +226,13 @@
         </Style>
 
         <Style x:Key="ClearButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
-            <Setter Property="Background" Value="#FF211D29"/>
-            <Setter Property="BorderBrush" Value="#4DBE78DC"/>
+            <Setter Property="Foreground" Value="#D8D1E2"/>
+            <Setter Property="Background" Value="#8C211D29"/>
+            <Setter Property="BorderBrush" Value="#3DBE78DC"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="14,5"/>
+            <Setter Property="Padding" Value="12,4"/>
             <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -248,9 +249,9 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="ButtonBorder" Property="Background"
-                                        Value="#FF30223A"/>
+                                        Value="#C32F2440"/>
                                 <Setter TargetName="ButtonBorder" Property="BorderBrush"
-                                        Value="#8CC65AE8"/>
+                                        Value="#99C65AE8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -440,7 +441,8 @@
         <Grid.Triggers>
             <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                 <BeginStoryboard>
-                    <Storyboard RepeatBehavior="Forever">
+                    <Storyboard RepeatBehavior="Forever"
+                                Timeline.DesiredFrameRate="10">
                         <ColorAnimationUsingKeyFrames Storyboard.TargetName="GlowCenterStop"
                                                       Storyboard.TargetProperty="Color"
                                                       Duration="0:1:30">
@@ -587,7 +589,8 @@
             <Border.Triggers>
                 <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                     <BeginStoryboard>
-                        <Storyboard RepeatBehavior="Forever">
+                        <Storyboard RepeatBehavior="Forever"
+                                    Timeline.DesiredFrameRate="10">
                             <DoubleAnimation Storyboard.TargetName="DividerGradientTransform"
                                              Storyboard.TargetProperty="X"
                                              From="0" To="1"
@@ -649,7 +652,7 @@
                             <TextBlock Text="Permanently activate Windows."
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Run HWID" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule1"
                                 Click="BtnModule1_Click"/>
@@ -672,7 +675,7 @@
                             <TextBlock Text="Permanently activate Office."
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Open options" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule2"
                                 Click="BtnModule2_Click"/>
@@ -695,7 +698,7 @@
                             <TextBlock Text="Permanently activate Windows, ESU, and Office."
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Open options" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule3"
                                 Click="BtnModule3_Click"/>
@@ -717,7 +720,7 @@
                             <TextBlock Text="Activate Windows/Office for 180 days (Lifetime with renewal task)."
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Open options" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule4"
                                 Click="BtnModule4_Click"/>
@@ -766,7 +769,7 @@
                             <TextBlock Text="Check Windows/Office activation status."
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action now" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Check status" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule5"
                                 Click="BtnModule5_Click"/>
@@ -791,7 +794,7 @@
                             <TextBlock Text="Switch Windows edition (Home, Pro, Enterprise)"
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action now" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Open menu" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule6"
                                 Click="BtnModule6_Click"/>
@@ -816,14 +819,40 @@
                             <TextBlock Text="Switch Office edition and manage licenses"
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action now" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Open menu" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule7"
                                 Click="BtnModule7_Click"/>
                     </Grid>
                 </Border>
 
-                <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                        Style="{StaticResource ModuleCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="34"/><RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Path Grid.Row="0" Style="{StaticResource ModuleIconStyle}"
+                              Data="M6,4 H20 L26,10 V27 H6 Z M20,4 V10 H26 M10,15 H22 M10,19 H22 M10,23 H18"
+                              Stroke="#E044B8" StrokeThickness="2" StrokeLineJoin="Round"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Width="28" Height="30" Stretch="Uniform" HorizontalAlignment="Left"/>
+                        <StackPanel Grid.Row="1" Margin="0,8,0,0">
+                            <TextBlock Text="Microsoft 365"
+                                       Style="{StaticResource ModuleTitleTextStyle}"/>
+                            <TextBlock Text="Download the latest official Office installer."
+                                       Style="{StaticResource ModuleDescriptionTextStyle}"/>
+                        </StackPanel>
+                        <Button Grid.Row="3" Content="Download &amp; run"
+                                Style="{StaticResource CardActionButtonStyle}"
+                                Margin="0,6,0,0"
+                                x:Name="BtnModule10"
+                                Click="BtnModule10_Click"/>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2"
                         Style="{StaticResource ModuleCardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -841,14 +870,14 @@
                             <TextBlock Text="Advanced activation troubleshooting."
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action now" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Open tools" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule8"
                                 Click="BtnModule8_Click"/>
                     </Grid>
                 </Border>
 
-                <Border Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2"
+                <Border Grid.Row="1" Grid.Column="4" Grid.ColumnSpan="2"
                         Style="{StaticResource ModuleCardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -866,7 +895,7 @@
                             <TextBlock Text="$OEM$ folders for pre-activation."
                                        Style="{StaticResource ModuleDescriptionTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Row="3" Content="Action now" Style="{StaticResource CardActionButtonStyle}"
+                        <Button Grid.Row="3" Content="Open presets" Style="{StaticResource CardActionButtonStyle}"
                                 Margin="0,6,0,0"
                                 x:Name="BtnModule9"
                                 Click="BtnModule9_Click"/>
@@ -878,23 +907,35 @@
             </Grid>
 
             <Border Grid.Row="1"
-                    Background="#E80B0C10"
-                    BorderBrush="#35BE78DC"
+                    Background="#E80D0B12"
+                    BorderBrush="#4DBE78DC"
                     BorderThickness="1"
-                    CornerRadius="10"
-                    Padding="16"
+                    CornerRadius="12"
+                    Padding="14"
                     Margin="0,14,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="28"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0"
-                               Text="ACTIVITY LOG"
-                               Foreground="#A5A0AD"
-                               FontSize="11"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="0"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Ellipse Width="7"
+                                 Height="7"
+                                 Fill="#C65AE8"
+                                 Margin="0,0,8,0"/>
+                        <TextBlock Text="ACTIVITY LOG"
+                                   Foreground="#F0EAF7"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="  /  SESSION OUTPUT"
+                                   Foreground="#777180"
+                                   FontSize="9"
+                                   FontWeight="Medium"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
                     <StackPanel Grid.Row="0"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Right">
@@ -906,25 +947,32 @@
                                 Style="{StaticResource ClearButtonStyle}"
                                 Click="BtnClear_Click"/>
                     </StackPanel>
-                    <RichTextBox x:Name="TxtConsole"
-                                 Grid.Row="1"
-                                 Background="Transparent"
-                                 CaretBrush="#E044B8"
-                                 FontFamily="pack://application:,,,/MySystemGui;component/Fonts/#Inter"
-                                 FontSize="13"
-                                 IsReadOnly="True"
-                                 IsReadOnlyCaretVisible="True"
-                                 VerticalScrollBarVisibility="Auto"
-                                 HorizontalScrollBarVisibility="Disabled"
-                                 BorderThickness="0"
-                                 Padding="2,8,2,0">
-                        <FlowDocument Background="Transparent"
-                                      FontFamily="pack://application:,,,/MySystemGui;component/Fonts/#Inter"
-                                      FontSize="13"
-                                      FontWeight="Medium"
-                                      PagePadding="0">
-                        </FlowDocument>
-                    </RichTextBox>
+                    <Border Grid.Row="1"
+                            Margin="0,8,0,0"
+                            Background="#5208070C"
+                            BorderBrush="#29262F36"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="8,4">
+                        <RichTextBox x:Name="TxtConsole"
+                                     Background="Transparent"
+                                     CaretBrush="#E044B8"
+                                     FontFamily="pack://application:,,,/MySystemGui;component/Fonts/#Inter"
+                                     FontSize="13"
+                                     IsReadOnly="True"
+                                     IsReadOnlyCaretVisible="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     HorizontalScrollBarVisibility="Disabled"
+                                     BorderThickness="0"
+                                     Padding="2,4">
+                            <FlowDocument Background="Transparent"
+                                          FontFamily="pack://application:,,,/MySystemGui;component/Fonts/#Inter"
+                                          FontSize="13"
+                                          FontWeight="Medium"
+                                          PagePadding="0">
+                            </FlowDocument>
+                        </RichTextBox>
+                    </Border>
                 </Grid>
             </Border>
         </Grid>

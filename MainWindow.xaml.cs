@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,6 +39,7 @@ public partial class MainWindow : FluentWindow
     private static readonly SolidColorBrush ErrorLogBrush = CreateFrozenBrush(248, 113, 113);
     private readonly Queue<LogEntry> _logHistory = new();
     private readonly MaintenanceService _maintenanceService = new();
+    private readonly OfficeInstallerService _officeInstallerService = new();
     private readonly DispatcherTimer _notificationTimer = new()
     {
         Interval = TimeSpan.FromSeconds(5)
@@ -148,6 +150,7 @@ public partial class MainWindow : FluentWindow
         BtnModule7.IsEnabled = !isBusy;
         BtnModule8.IsEnabled = !isBusy;
         BtnModule9.IsEnabled = !isBusy;
+        BtnModule10.IsEnabled = !isBusy;
     }
 
     private bool ConfirmTask(string title, string message) =>
@@ -233,6 +236,102 @@ public partial class MainWindow : FluentWindow
         ShowSubMenu("Extras", ViewExtras);
         ShowExtrasStep(ModalStep.ExtrasStep1);
     }
+
+    private async void BtnModule10_Click(object sender, RoutedEventArgs e) =>
+        await DownloadAndRunOfficeInstallerAsync();
+
+    private async Task DownloadAndRunOfficeInstallerAsync()
+    {
+        if (_isBusy)
+        {
+            ShowNotification("Another task is already running. Please wait until it finishes.", LogStatus.Warning);
+            return;
+        }
+
+        if (!ConfirmTask(
+                "Download Microsoft 365 setup",
+                "Download the latest Microsoft 365 Apps installer from Microsoft's Office service to a temporary folder, then open it. " +
+                "The installer will use the Internet to download Office. You will handle its prompts; the app will not install silently. " +
+                "A valid Microsoft 365 or Office license is required for activation. Continue?"))
+        {
+            ShowNotification("Microsoft 365 setup was not started.", LogStatus.Info);
+            return;
+        }
+
+        SetBusyState(true);
+        string? installerPath = null;
+        try
+        {
+            ShowNotification("Downloading the official Microsoft 365 installer.", LogStatus.Info);
+            AppendLog("> Downloading Microsoft 365 setup from Microsoft...", LogStatus.Info);
+
+            var lastLoggedProgress = 0;
+            installerPath = await _officeInstallerService.DownloadLatestInstallerAsync(progress =>
+            {
+                var roundedProgress = progress / 10 * 10;
+                if (roundedProgress >= lastLoggedProgress + 10)
+                {
+                    lastLoggedProgress = roundedProgress;
+                    AppendLog($"> Office installer download: {roundedProgress}%", LogStatus.Info);
+                }
+            });
+
+            AppendLog("> Download complete. Opening the Microsoft installer...", LogStatus.Success);
+            var installerProcess = Process.Start(new ProcessStartInfo
+            {
+                FileName = installerPath,
+                UseShellExecute = true
+            });
+
+            if (installerProcess is null)
+            {
+                throw new InvalidOperationException("Windows did not start the Microsoft 365 installer.");
+            }
+
+            await installerProcess.WaitForExitAsync();
+            if (!_isClosing)
+            {
+                AppendLog(
+                    $"> Microsoft 365 setup closed with exit code {installerProcess.ExitCode}.",
+                    installerProcess.ExitCode == 0 ? LogStatus.Info : LogStatus.Warning);
+                ShowNotification(
+                    "The Microsoft installer has closed. Check its window for the installation result.",
+                    installerProcess.ExitCode == 0 ? LogStatus.Info : LogStatus.Warning);
+            }
+        }
+        catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            if (!_isClosing)
+            {
+                ShowNotification("Microsoft 365 setup was cancelled at the Windows permission prompt.", LogStatus.Info);
+            }
+        }
+        catch (Exception ex) when (
+            ex is HttpRequestException or IOException or UnauthorizedAccessException or SecurityException or
+                InvalidOperationException or Win32Exception or OperationCanceledException)
+        {
+            if (!_isClosing)
+            {
+                ShowNotification(
+                    "Could not download or start Microsoft 365 setup. Check your Internet connection and try again.",
+                    LogStatus.Error,
+                    ex.Message);
+            }
+        }
+        finally
+        {
+            if (installerPath is not null && !OfficeInstallerService.TryDeleteInstaller(installerPath) && !_isClosing)
+            {
+                AppendLog("> Warning: Could not remove the temporary Office installer.", LogStatus.Warning);
+            }
+
+            if (!_isClosing)
+            {
+                SetBusyState(false);
+            }
+        }
+    }
+
     private void BtnGithub_Click(object sender, RoutedEventArgs e) => OpenWebsite("https://github.com/massgravel/microsoft-activation-scripts");
     private void BtnBlog_Click(object sender, RoutedEventArgs e) => OpenWebsite("https://massgrave.dev/blog");
     private void BtnContactUs_Click(object sender, RoutedEventArgs e) => OpenWebsite("http://massgrave.dev/contactus");
@@ -288,7 +387,7 @@ public partial class MainWindow : FluentWindow
         var surfaceBrush = new SolidColorBrush(Color.FromRgb(11, 13, 16));
         var fullLogWindow = new Window
         {
-            Title = "ThemeCore - Full Activity Log",
+            Title = "MAS",
             Width = 1100,
             Height = 760,
             MinWidth = 720,
@@ -599,26 +698,26 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
-        string scriptPath;
-        try
-        {
-            scriptPath = MasScriptProvider.GetScriptPath();
-        }
-        catch (Exception ex) when (
-            ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException)
-        {
-            ShowNotification(
-                "The embedded MAS script could not be extracted. See the Activity Log for details.",
-                LogStatus.Error,
-                ex.Message);
-            return;
-        }
-
         if (!ConfirmTask(
                 "Confirm MAS action",
                 $"Run MAS_AIO.cmd with these arguments?\n{arguments}\n\nThis may modify Windows or Office licensing state."))
         {
             ShowNotification("MAS_AIO.cmd run cancelled.", LogStatus.Info);
+            return;
+        }
+
+        string scriptPath;
+        try
+        {
+            scriptPath = MasScriptProvider.CreateTemporaryScript();
+        }
+        catch (Exception ex) when (
+            ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException)
+        {
+            ShowNotification(
+                "The embedded MAS script could not be prepared. See the Activity Log for details.",
+                LogStatus.Error,
+                ex.Message);
             return;
         }
 
@@ -758,6 +857,11 @@ public partial class MainWindow : FluentWindow
         {
             if (!processMayStillBeRunning)
             {
+                if (!MasScriptProvider.TryDeleteTemporaryScript(scriptPath))
+                {
+                    AppendLog("> Warning: Could not remove the temporary MAS script.", LogStatus.Warning);
+                }
+
                 SetBusyState(false);
             }
         }
@@ -777,24 +881,24 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
+        if (!ConfirmTask("Open native MAS workflow", confirmationMessage))
+        {
+            ShowNotification($"{workflow} was not started.", LogStatus.Info);
+            return;
+        }
+
         string scriptPath;
         try
         {
-            scriptPath = MasScriptProvider.GetScriptPath();
+            scriptPath = MasScriptProvider.CreateTemporaryScript();
         }
         catch (Exception ex) when (
             ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException)
         {
             ShowNotification(
-                "The embedded MAS script could not be extracted. See the Activity Log for details.",
+                "The embedded MAS script could not be prepared. See the Activity Log for details.",
                 LogStatus.Error,
                 ex.Message);
-            return;
-        }
-
-        if (!ConfirmTask("Open native MAS workflow", confirmationMessage))
-        {
-            ShowNotification($"{workflow} was not started.", LogStatus.Info);
             return;
         }
 
@@ -873,6 +977,11 @@ public partial class MainWindow : FluentWindow
         }
         finally
         {
+            if (!MasScriptProvider.TryDeleteTemporaryScript(scriptPath))
+            {
+                AppendLog("> Warning: Could not remove the temporary MAS script.", LogStatus.Warning);
+            }
+
             if (!_isClosing)
             {
                 SetBusyState(false);
@@ -1063,15 +1172,26 @@ public partial class MainWindow : FluentWindow
             string scriptsDir = Path.Combine(desktopDir, "$OEM$", "$$", "Setup", "Scripts");
             Directory.CreateDirectory(scriptsDir);
 
-            string sourceScript = MasScriptProvider.GetScriptPath();
+            string sourceScript = MasScriptProvider.CreateTemporaryScript();
             bool masScriptCopied = File.Exists(sourceScript);
-            if (masScriptCopied)
+            try
             {
-                File.Copy(sourceScript, Path.Combine(scriptsDir, "MAS_AIO.cmd"), overwrite: true);
+                if (masScriptCopied)
+                {
+                    File.Copy(sourceScript, Path.Combine(scriptsDir, "MAS_AIO.cmd"), overwrite: true);
+                }
             }
-            else
+            finally
             {
-                AppendLog("> Warning: The embedded MAS script could not be extracted; SetupComplete.cmd was still generated.", LogStatus.Warning);
+                if (!MasScriptProvider.TryDeleteTemporaryScript(sourceScript))
+                {
+                    AppendLog("> Warning: Could not remove the temporary MAS script.", LogStatus.Warning);
+                }
+            }
+
+            if (!masScriptCopied)
+            {
+                AppendLog("> Warning: The embedded MAS script could not be prepared; SetupComplete.cmd was still generated.", LogStatus.Warning);
             }
 
             string setupCompletePath = Path.Combine(scriptsDir, "SetupComplete.cmd");

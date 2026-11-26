@@ -44,6 +44,7 @@ public sealed class MaintenanceService
     {
         ArgumentNullException.ThrowIfNull(onLog);
 
+        string? temporaryScriptPath = null;
         var (executable, arguments, displayName) = task switch
         {
             MaintenanceTask.WindowsImageRepair => (
@@ -54,7 +55,7 @@ public sealed class MaintenanceService
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "sfc.exe"),
                 "/scannow",
                 "SFC Scannow"),
-            MaintenanceTask.LicenseStatusCheck => BuildMasActivationStatusCommand(),
+            MaintenanceTask.LicenseStatusCheck => BuildMasActivationStatusCommand(out temporaryScriptPath),
             MaintenanceTask.WmiRepositoryRepair => (
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "winmgmt.exe"),
                 "/salvagerepository",
@@ -62,43 +63,55 @@ public sealed class MaintenanceService
             _ => throw new ArgumentOutOfRangeException(nameof(task), task, "Unsupported maintenance task.")
         };
 
-        onLog($"> Starting {displayName}...");
-
-        using var process = new Process
+        try
         {
-            StartInfo = new ProcessStartInfo
+            onLog($"> Starting {displayName}...");
+
+            using var process = new Process
             {
-                FileName = executable,
-                Arguments = arguments,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                WindowStyle = ProcessWindowStyle.Hidden
-            },
-            EnableRaisingEvents = true
-        };
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = executable,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                },
+                EnableRaisingEvents = true
+            };
 
-        if (!process.Start())
-        {
-            throw new InvalidOperationException($"Could not start {displayName}.");
+            if (!process.Start())
+            {
+                throw new InvalidOperationException($"Could not start {displayName}.");
+            }
+
+            var stdoutTask = ForwardLinesAsync(process.StandardOutput, onLog);
+            var stderrTask = ForwardLinesAsync(process.StandardError, onLog);
+
+            await process.WaitForExitAsync();
+            await Task.WhenAll(stdoutTask, stderrTask);
+
+            onLog($"> {displayName} exited with code {process.ExitCode}.");
+            return process.ExitCode;
         }
-
-        var stdoutTask = ForwardLinesAsync(process.StandardOutput, onLog);
-        var stderrTask = ForwardLinesAsync(process.StandardError, onLog);
-
-        await process.WaitForExitAsync();
-        await Task.WhenAll(stdoutTask, stderrTask);
-
-        onLog($"> {displayName} exited with code {process.ExitCode}.");
-        return process.ExitCode;
+        finally
+        {
+            if (temporaryScriptPath is not null &&
+                !MasScriptProvider.TryDeleteTemporaryScript(temporaryScriptPath))
+            {
+                onLog("> Warning: Could not remove the temporary MAS script.");
+            }
+        }
     }
 
-    private static (string Executable, string Arguments, string DisplayName) BuildMasActivationStatusCommand()
+    private static (string Executable, string Arguments, string DisplayName) BuildMasActivationStatusCommand(
+        out string temporaryScriptPath)
     {
-        string scriptPath = MasScriptProvider.GetScriptPath();
+        temporaryScriptPath = MasScriptProvider.CreateTemporaryScript();
 
-        string escapedScriptPath = scriptPath.Replace("'", "''", StringComparison.Ordinal);
+        string escapedScriptPath = temporaryScriptPath.Replace("'", "''", StringComparison.Ordinal);
         string command =
             $"$f=[IO.File]::ReadAllText('{escapedScriptPath}') -split ':sppmgr\\:.*';. ([scriptblock]::Create($f[1]))";
         string encodedCommand = Convert.ToBase64String(Encoding.Unicode.GetBytes(command));

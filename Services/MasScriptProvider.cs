@@ -10,7 +10,7 @@ internal static class MasScriptProvider
 {
     private const string ResourceSuffix = "MAS_AIO.cmd";
 
-    public static string GetScriptPath()
+    public static string CreateTemporaryScript()
     {
         var assembly = typeof(MasScriptProvider).Assembly;
         var resourceName = assembly.GetManifestResourceNames()
@@ -23,8 +23,6 @@ internal static class MasScriptProvider
         resourceStream.CopyTo(memoryStream);
         var scriptContents = memoryStream.ToArray();
         var scriptHash = SHA256.HashData(scriptContents);
-        var hashText = Convert.ToHexString(scriptHash).ToLowerInvariant();
-
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         if (string.IsNullOrWhiteSpace(localAppData))
         {
@@ -37,34 +35,34 @@ internal static class MasScriptProvider
             "Microsoft Activation Scripts GUI");
         Directory.CreateDirectory(scriptDirectory);
 
-        var scriptPath = Path.Combine(scriptDirectory, $"MAS_AIO-{hashText}.cmd");
-        if (File.Exists(scriptPath))
-        {
-            VerifyScriptHash(scriptPath, scriptHash);
-            return scriptPath;
-        }
-
-        var temporaryPath = Path.Combine(scriptDirectory, $"{Guid.NewGuid():N}.tmp");
+        var scriptPath = Path.Combine(scriptDirectory, $"MAS_AIO-{Guid.NewGuid():N}.cmd");
         try
         {
-            File.WriteAllBytes(temporaryPath, scriptContents);
-            try
-            {
-                File.Move(temporaryPath, scriptPath);
-            }
-            catch (IOException) when (File.Exists(scriptPath))
-            {
-            }
-
+            File.WriteAllBytes(scriptPath, scriptContents);
             VerifyScriptHash(scriptPath, scriptHash);
             return scriptPath;
         }
-        finally
+        catch
         {
-            if (File.Exists(temporaryPath))
+            TryDeleteTemporaryScript(scriptPath);
+            throw;
+        }
+    }
+
+    public static bool TryDeleteTemporaryScript(string scriptPath)
+    {
+        try
+        {
+            if (File.Exists(scriptPath))
             {
-                File.Delete(temporaryPath);
+                File.Delete(scriptPath);
             }
+
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            return false;
         }
     }
 
