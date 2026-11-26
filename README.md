@@ -28,7 +28,7 @@ The release is a self-contained, single-file Windows x64 app; you do not need to
 
 - **MAS workflows:** Open supported HWID, Ohook, TSforge, and Online KMS actions.
 - **Windows and Office tools:** Check activation status and open supported edition and licensing menus.
-- **Microsoft 365 setup:** Download the official Microsoft installer to a temporary folder, show download progress in the Activity Log, and open it for an interactive setup. The app does not install Office silently.
+- **Microsoft 365 setup:** Download the official Microsoft installer to a temporary folder (or reuse a cached copy), show download progress in the Activity Log, and open it for an interactive setup. The app does not install Office silently.
 - **Troubleshooting and extras:** Access supported repair tasks and utility options.
 - **Activity Log:** Review session output or open the full log in a separate window.
 
@@ -37,8 +37,8 @@ Some MAS workflows open the original MAS console so its own checks, choices, and
 ## Temporary files and limitations
 
 - The embedded MAS script is written to a uniquely named temporary file when needed and removed after its workflow ends. If a workflow cannot be stopped safely or Windows prevents cleanup, the file may remain.
-- The Microsoft installer is downloaded to the system temporary folder and removed after its process closes, when Windows allows cleanup.
-- The app waits for the Microsoft installer process to close and records its exit code. It does **not** independently verify that Office installed successfully; check the installer and Office after setup.
+- The Microsoft installer is cached at `%TEMP%\MAS GUI\OfficeSetup.exe` and reused if it passes basic file checks. The app does not automatically delete this cached installer.
+- The app checks Office Click-to-Run registry information before and after setup and records the installer's exit code. This does not confirm that Word or Excel starts correctly or that Office is activated.
 - MAS cache files created by older versions are not automatically deleted by this update.
 - An Internet connection is required to download the Microsoft installer and for online MAS workflows.
 

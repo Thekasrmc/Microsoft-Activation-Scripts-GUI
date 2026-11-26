@@ -248,25 +248,42 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
-        if (!ConfirmTask(
-                "Download Microsoft 365 setup",
-                "Download the latest Microsoft 365 Apps installer from Microsoft's Office service to a temporary folder, then open it. " +
-                "The installer will use the Internet to download Office. You will handle its prompts; the app will not install silently. " +
-                "A valid Microsoft 365 or Office license is required for activation. Continue?"))
+        OfficeInstallation? installedBefore = null;
+        var officeCheckSucceeded = true;
+        try
+        {
+            installedBefore = OfficeInstallerService.DetectInstalledOffice();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            officeCheckSucceeded = false;
+            AppendLog("> Could not check the existing Office installation: " + ex.Message, LogStatus.Warning);
+        }
+
+        var confirmationMessage = installedBefore is not null
+            ? $"Office Click-to-Run is already detected ({installedBefore.ProductReleaseIds}, version {installedBefore.PackageVersion}). " +
+              "Running setup may update or modify that installation. Continue?"
+            : officeCheckSucceeded
+                ? "No Office Click-to-Run installation was detected. Download the latest Microsoft 365 Apps installer from Microsoft's Office service to a temporary folder, then open it. " +
+                  "The installer will use the Internet to download Office. You will handle its prompts; the app will not install silently. " +
+                  "A valid Microsoft 365 or Office license is required for activation. Continue?"
+                : "The app could not determine whether Office is already installed. Download the latest Microsoft 365 Apps installer from Microsoft's Office service to a temporary folder, then open it? " +
+                  "The installer will use the Internet and may update or modify an existing Office installation. A valid license is required for activation.";
+
+        if (!ConfirmTask("Microsoft 365 setup", confirmationMessage))
         {
             ShowNotification("Microsoft 365 setup was not started.", LogStatus.Info);
             return;
         }
 
         SetBusyState(true);
-        string? installerPath = null;
         try
         {
-            ShowNotification("Downloading the official Microsoft 365 installer.", LogStatus.Info);
-            AppendLog("> Downloading Microsoft 365 setup from Microsoft...", LogStatus.Info);
+            ShowNotification("Preparing the official Microsoft 365 installer.", LogStatus.Info);
+            AppendLog("> Checking for a cached Microsoft Office installer in Temp...", LogStatus.Info);
 
             var lastLoggedProgress = 0;
-            installerPath = await _officeInstallerService.DownloadLatestInstallerAsync(progress =>
+            var installer = await _officeInstallerService.GetInstallerAsync(progress =>
             {
                 var roundedProgress = progress / 10 * 10;
                 if (roundedProgress >= lastLoggedProgress + 10)
@@ -276,10 +293,18 @@ public partial class MainWindow : FluentWindow
                 }
             });
 
-            AppendLog("> Download complete. Opening the Microsoft installer...", LogStatus.Success);
+            if (installer.UsedCachedInstaller)
+            {
+                AppendLog("> Using the cached Microsoft Office installer from Temp.", LogStatus.Info);
+            }
+            else
+            {
+                AppendLog("> Download complete. Opening the Microsoft installer...", LogStatus.Success);
+            }
+
             var installerProcess = Process.Start(new ProcessStartInfo
             {
-                FileName = installerPath,
+                FileName = installer.Path,
                 UseShellExecute = true
             });
 
@@ -291,12 +316,46 @@ public partial class MainWindow : FluentWindow
             await installerProcess.WaitForExitAsync();
             if (!_isClosing)
             {
-                AppendLog(
-                    $"> Microsoft 365 setup closed with exit code {installerProcess.ExitCode}.",
-                    installerProcess.ExitCode == 0 ? LogStatus.Info : LogStatus.Warning);
-                ShowNotification(
-                    "The Microsoft installer has closed. Check its window for the installation result.",
-                    installerProcess.ExitCode == 0 ? LogStatus.Info : LogStatus.Warning);
+                try
+                {
+                    var installedAfter = OfficeInstallerService.DetectInstalledOffice();
+                    if (installedAfter is not null)
+                    {
+                        var status = installerProcess.ExitCode != 0
+                            ? LogStatus.Warning
+                            : installedBefore is null && officeCheckSucceeded
+                                ? LogStatus.Success
+                                : LogStatus.Info;
+                        var message = installedBefore is null
+                            ? "Office installation was detected."
+                            : "Office remains detected after setup.";
+                        AppendLog(
+                            $"> {message} {installedAfter.ProductReleaseIds}; version {installedAfter.PackageVersion}. " +
+                            $"Setup exit code: {installerProcess.ExitCode}.",
+                            status);
+                        ShowNotification(message, status, "Open Word or Excel to confirm it starts and run Ohook to activate it.");
+                    }
+                    else
+                    {
+                        AppendLog(
+                            $"> Office Click-to-Run was not detected after setup. Exit code: {installerProcess.ExitCode}.",
+                            LogStatus.Warning);
+                        ShowNotification(
+                            "Office was not detected after setup closed.",
+                            LogStatus.Warning,
+                            "The installer exit code alone does not confirm installation. Check the Microsoft installer window for details.");
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+                {
+                    AppendLog(
+                        $"> Could not verify Office after setup. Exit code: {installerProcess.ExitCode}. {ex.Message}",
+                        LogStatus.Warning);
+                    ShowNotification(
+                        "The installer closed, but the app could not verify Office installation.",
+                        LogStatus.Warning,
+                        ex.Message);
+                }
             }
         }
         catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
@@ -320,11 +379,6 @@ public partial class MainWindow : FluentWindow
         }
         finally
         {
-            if (installerPath is not null && !OfficeInstallerService.TryDeleteInstaller(installerPath) && !_isClosing)
-            {
-                AppendLog("> Warning: Could not remove the temporary Office installer.", LogStatus.Warning);
-            }
-
             if (!_isClosing)
             {
                 SetBusyState(false);
